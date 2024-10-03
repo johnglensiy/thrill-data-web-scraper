@@ -3,12 +3,20 @@ from importlib.metadata import Lookup
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import time
 
-options = Options()
+options = FirefoxOptions()
+options.set_preference('browser.download.folderList', 2)
+options.set_preference('browser.download.dir', './Desktop/wait_times_data')
+# options.set_preference('browser.download.manager.showWhenStarting', False)
+# options.set_preference('browser.download.manager.focusWhenStarting', False)
+
 # options.add_argument('--headless')
 
 driver = webdriver.Firefox(options=options)
@@ -58,10 +66,15 @@ def get_cookies():
 def download_data():
     print(f'Downloading data from {data_URL}...')
     driver.get(data_URL)
-    dl_category = driver.find_element(By.ID, 'dl_day')
+    dl_category = driver.find_element(By.ID, 'dl_may')
 
     dl_category.click()
-    dl_button = driver.find_element(By.XPATH, '/html/body/div[2]/div[13]/div[2]/div[31]/div/div[3]/a')
+    # include check for file existence
+    dl_button = WebDriverWait(driver, 5).until(
+        EC.presence_of_element_located((By.LINK_TEXT, "Download Now!"))
+    )
+
+    print(dl_button.text)
     dl_button.click()
     print(f'Data downloaded')
 
