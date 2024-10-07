@@ -10,10 +10,21 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+import os
+
+desktop_path = os.path.join(os.path.expanduser('~'), 'Desktop', 'wait_times_data')
 
 options = FirefoxOptions()
 options.set_preference('browser.download.folderList', 2)
-options.set_preference('browser.download.dir', './Desktop/wait_times_data')
+options.set_preference('browser.download.dir', desktop_path)
+options.set_preference("browser.download.manager.showWhenStarting", False)
+options.set_preference("browser.download.manager.focusWhenStarting", False)
+options.set_preference("browser.download.useDownloadDir", True)
+options.set_preference("browser.helperApps.alwaysAsk.force", False)
+options.set_preference("browser.download.manager.alertOnEXEOpen", False)
+options.set_preference("browser.download.manager.closeWhenDone", True)
+options.set_preference("browser.download.manager.showAlertOnComplete", False)
+options.set_preference("browser.download.manager.useWindow", False)
 # options.set_preference('browser.download.manager.showWhenStarting', False)
 # options.set_preference('browser.download.manager.focusWhenStarting', False)
 
@@ -77,7 +88,6 @@ def download_data():
     print(dl_button.text)
     dl_button.click()
     print(f'Data downloaded')
-
 
 def main():
     login()
