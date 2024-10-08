@@ -3,6 +3,7 @@ from importlib.metadata import Lookup
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.common import StaleElementReferenceException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.by import By
@@ -44,6 +45,7 @@ headers = {
     'Referer': 'https://www.thrill-data.com/users/login'
 }
 
+
 def login():
     print(f'Logging in...')
     driver.get(login_URL)
@@ -74,20 +76,38 @@ def get_cookies():
         cookies[cookie['name']] = cookie['value']
     return cookies
 
+# def click_element():
+
+
+
+
 def download_data():
+    dl_categories = ["dl_jan", "dl_feb", "dl_mar",
+              "dl_apr", "dl_may", "dl_jun", "dl_jul",
+              "dl_aug", "dl_sep", "dl_oct", "dl_nov", "dl_dec"]
     print(f'Downloading data from {data_URL}...')
     driver.get(data_URL)
-    dl_category = driver.find_element(By.ID, 'dl_may')
+    for cat in dl_categories:
+        dl_category = driver.find_element(By.ID, cat)
+        print(dl_category.text)
 
-    dl_category.click()
-    # include check for file existence
-    dl_button = WebDriverWait(driver, 5).until(
-        EC.presence_of_element_located((By.LINK_TEXT, "Download Now!"))
-    )
+        # error occurring here element is not clickable
 
-    print(dl_button.text)
-    dl_button.click()
-    print(f'Data downloaded')
+        driver.execute_script("arguments[0].click();", dl_category)
+
+        # include check for file existence
+        wait = WebDriverWait(driver, 10, ignored_exceptions=[StaleElementReferenceException])
+        dl_button = wait.until(EC.element_to_be_clickable((By.LINK_TEXT, "Download Now!")))
+        driver.execute_script("arguments[0].click();", dl_button)
+        # dl_button.click()
+        # dl_button = (WebDriverWait(driver, 10, ignored_exceptions=StaleElementReferenceException)
+        #     EC.presence_of_element_located((By.LINK_TEXT, "Download Now!"))
+        # ))
+
+        # print(dl_button.text)
+        # driver.execute_script("arguments[0].click();", dl_button)
+        # dl_button.click()
+        print(f'Data downloaded')
 
 def main():
     login()
