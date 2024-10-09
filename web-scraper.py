@@ -10,6 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 import time
 import os
 
@@ -78,8 +79,33 @@ def get_cookies():
 
 # def click_element():
 
+def check_for_element(locator, max_retries=3):
+    # access download link div
+    for attempt in range(max_retries):
+        try:
+            # Wait for up to 10 seconds for the element to be present
+            element = WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located(locator)
+            )
+            print("element is present")
+            return element
+        except TimeoutException:
+            print(f"Attempt {attempt + 1} failed - element is not present yet")
+    return None
 
-
+    # for attempt in range(max_retries):
+    #     try:
+    #         # Attempt download
+    #         download_button = driver.find_element_by_css_selector('.download-csv')
+    #         download_button.click()
+    #
+    #         # Wait for download to complete
+    #         time.sleep(5)
+    #         return True
+    #     except Exception as e:
+    #         print(f"Download attempt {attempt + 1} failed: {str(e)}")
+    #         time.sleep(2)
+    # return False
 
 def download_data():
     dl_categories = ["dl_jan", "dl_feb", "dl_mar",
@@ -88,26 +114,38 @@ def download_data():
     print(f'Downloading data from {data_URL}...')
     driver.get(data_URL)
     for cat in dl_categories:
+        # check for download-link div which is container for dynamically loaded button
+        download_div = check_for_element((By.ID, "download-link"))
+
+        # find category button and click it (seems to consistently work)
         dl_category = driver.find_element(By.ID, cat)
         print(dl_category.text)
-
-        # error occurring here element is not clickable
-
         driver.execute_script("arguments[0].click();", dl_category)
 
+        # check if download link was made available
+        children = download_div.find_elements()
+        for child in children:
+            print(child.text)
         # include check for file existence
-        wait = WebDriverWait(driver, 10, ignored_exceptions=[StaleElementReferenceException])
+
+        # check for download-button
+        check_for_element((By.LINK_TEXT, "Download Now!"))
+        wait = WebDriverWait(driver, 30, ignored_exceptions=[StaleElementReferenceException])
+
+        # don't wait for element to be clickable find it instead
         dl_button = wait.until(EC.element_to_be_clickable((By.LINK_TEXT, "Download Now!")))
         driver.execute_script("arguments[0].click();", dl_button)
-        # dl_button.click()
-        # dl_button = (WebDriverWait(driver, 10, ignored_exceptions=StaleElementReferenceException)
-        #     EC.presence_of_element_located((By.LINK_TEXT, "Download Now!"))
-        # ))
 
-        # print(dl_button.text)
-        # driver.execute_script("arguments[0].click();", dl_button)
-        # dl_button.click()
+        # timeout exception for whatever reason
+        # download button is contained inside a download div
+        # whenever a category button is clicked it dynamically loads the button inside said div
+        # workflow
+        #   check for existence of download div and print it
+        #   check for existence of download button and print it
+
+
         print(f'Data downloaded')
+        print(f'----------------------------------------------------------------')
 
 def main():
     login()
